@@ -1,0 +1,48 @@
+{
+  "name": "personal-project-55-nodejs-learning-management-system-qclient-backend-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "Learning Management System",
+    "LMS",
+    "React",
+    "Node.js",
+    "Educational Platform",
+    "Course Registration",
+    "Admin Dashboard",
+    "Scalable Platform",
+    "Secure LMS"
+  ],
+  "author": {
+    "name": "Richard Essuman",
+    "email": "ressuman001@gmail.com",
+    "url": "https://github.com/ressuman/Learning-Management-System-MERN-Project.git"
+  },
+  "license": "ISC",
+  "description": "G-Client is a scalable and secure Learning Management System (LMS) that provides dual interfaces for learners and administrators, simplifying course registration, payments, learner engagement, and administrative tasks.",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "helmet": "^8.0.0",
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.10.0",
+    "validator": "^13.12.0",
+    "xss": "^1.0.15",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
