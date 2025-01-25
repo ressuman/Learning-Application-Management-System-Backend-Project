@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import bcrypt from "bcryptjs";
 
 const userSchema = mongoose.Schema(
   {
@@ -71,14 +72,19 @@ const userSchema = mongoose.Schema(
       default: null,
       select: false,
     },
-
-    created_at: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = bcrypt.hashSync(this.password, 12);
+
+  this.passwordConfirm = undefined;
+
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 

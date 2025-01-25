@@ -11,6 +11,8 @@ import morgan from "morgan";
 import connectDB from "./config/db.js";
 import IndexError from "./middlewares/indexError.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import authUserRoutes from "./routes/users/auth/usersAuthRoutes.js";
+import authAdminRoutes from "./routes/admins/auth/adminsAuthRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT_NUMBER || 4200;
@@ -35,6 +37,13 @@ app.use(morgan("dev")); // Logging requests
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
+
+// Serve static files from the "public" directory
+app.use(express.static("public"));
+
+// Routes
+app.use("/api/v1/auth/user", authUserRoutes);
+app.use("/api/v1/auth/admin", authAdminRoutes);
 
 // Error Handling Middleware
 app.all("*", (err, req, res) => {
