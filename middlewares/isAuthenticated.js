@@ -1,17 +1,17 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "./asyncHandler.js";
-import IndexError from "./indexError";
+import IndexError from "./indexError.js";
 import dotenv from "dotenv";
 import User from "../models/users/userModel.js";
 dotenv.config();
 
-export const isAuthenticated = asyncHandler(async (req, res, next) => {
+export const isUserAuthenticated = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return next(
       new IndexError(
-        "Not authenticated. You  are not logged in.Please log in to have access to this resource.",
+        "Not authenticated. You  are not logged in. Please log in to have access to this resource.",
         401
       )
     );
@@ -34,3 +34,5 @@ export const isAuthenticated = asyncHandler(async (req, res, next) => {
 
   next();
 });
+
+export const isAdminAuthenticated = asyncHandler(async (req, res, next) => {});

@@ -52,7 +52,7 @@ const userSchema = mongoose.Schema(
     OTP: {
       type: String,
       default: null,
-      select: false,
+      //select: false,
     },
 
     OTPExpires: {
@@ -64,7 +64,7 @@ const userSchema = mongoose.Schema(
     resetPasswordOTP: {
       type: String,
       default: null,
-      select: false,
+      //select: false,
     },
 
     resetPasswordOTPExpires: {

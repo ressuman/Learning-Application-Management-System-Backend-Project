@@ -20,7 +20,7 @@ export const createSendToken = (user, statusCode, res, message) => {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "Lax",
   };
 
-  res.cookie("jwt-token", token, cookieOptions);
+  res.cookie("token", token, cookieOptions);
 
   user.password = undefined;
   user.passwordConfirm = undefined;

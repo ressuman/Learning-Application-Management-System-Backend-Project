@@ -15,6 +15,8 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
   }
 
   const { OTP, hashedOTP } = await generateOTP();
+  console.log("Generated OTP:", OTP);
+  console.log("Hashed OTP:", hashedOTP);
 
   const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
 
