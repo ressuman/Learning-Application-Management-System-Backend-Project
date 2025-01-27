@@ -22,6 +22,7 @@ export const createSendToken = (user, statusCode, res, message) => {
 
   res.cookie("token", token, cookieOptions);
 
+  // Exclude sensitive fields before sending the response
   user.password = undefined;
   user.passwordConfirm = undefined;
   user.OTP = undefined;
