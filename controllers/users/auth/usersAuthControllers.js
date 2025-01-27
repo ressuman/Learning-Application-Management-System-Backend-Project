@@ -111,4 +111,16 @@ export const userLogin = asyncHandler(async (req, res, next) => {
   createSendToken(user, 200, res, "User logged in successfully");
 });
 
-export const userLogout = asyncHandler(async (req, res, next) => {});
+export const userLogout = asyncHandler(async (req, res, next) => {
+  res.cookie("token", "Logged-Out", {
+    expires: new Date(Date.now() + 10 * 1000), //expires in 10 seconds
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    //sameSite: "none",
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "User logged out successfully",
+  });
+});

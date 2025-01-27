@@ -19,7 +19,7 @@ const userSchema = mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      validator: [validator.isEmail, "Please enter a valid email address"],
+      validate: [validator.isEmail, "Please enter a valid email address"],
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
     },
 
@@ -52,25 +52,21 @@ const userSchema = mongoose.Schema(
     OTP: {
       type: String,
       default: null,
-      //select: false,
     },
 
     OTPExpires: {
       type: Date,
       default: null,
-      select: false,
     },
 
     resetPasswordOTP: {
       type: String,
       default: null,
-      //select: false,
     },
 
     resetPasswordOTPExpires: {
       type: Date,
       default: null,
-      select: false,
     },
   },
   { timestamps: true }
