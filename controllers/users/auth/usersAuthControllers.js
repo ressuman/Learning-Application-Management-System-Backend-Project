@@ -15,8 +15,6 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
   }
 
   const { OTP, hashedOTP } = await generateOTP();
-  console.log("Generated OTP:", OTP);
-  console.log("Hashed OTP:", hashedOTP);
 
   const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
 
@@ -83,3 +81,34 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
     );
   }
 });
+
+export const userLogin = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new IndexError("Please provide email and password", 400));
+  }
+
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    return next(new IndexError("Invalid email or password", 401));
+  }
+
+  if (!user.isVerified) {
+    return next(
+      new IndexError(
+        "Your account is not verified. Please verify your email",
+        401
+      )
+    );
+  }
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new IndexError("Invalid email or password", 401));
+  }
+
+  createSendToken(user, 200, res, "User logged in successfully");
+});
+
+export const userLogout = asyncHandler(async (req, res, next) => {});
