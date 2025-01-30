@@ -1,11 +1,14 @@
 // Packages
 //import path from "path";
 import express from "express";
+import session from "express-session";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
+import passport from "passport";
+import "./config/passport/passport.js";
 
 // Utilities
 import connectDB from "./config/db.js";
@@ -39,15 +42,38 @@ app.use(
   })
 ); // Configure CORS
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
 app.use(morgan("dev")); // Logging requests
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serve static files from the "public" directory
 app.use(express.static("public"));
 
 // Routes
+app.get("/", (req, res) => {
+  res.send(`
+    <h1>Welcome to the Auth API</h1>
+    <p><a href="http://localhost:5173">Click here to go to the frontend</a></p>
+    <p><a href="/api/v1/auth/user/google">Login with Google</a></p>
+    <p><a href="/api/v1/auth/user/github">Login with GitHub</a></p>
+  `);
+});
+
+app.get("/profile", (req, res) => {
+  res.send(`<h1>Welcome to the Profile Page</h1>{req.user.displayName}`);
+});
+
 app.use("/api/v1/auth/user", authUserRoutes);
 app.use("/api/v1/auth/user", verifyUserAccountRoutes);
 app.use("/api/v1/auth/user", passwordUserManagementRoutes);
