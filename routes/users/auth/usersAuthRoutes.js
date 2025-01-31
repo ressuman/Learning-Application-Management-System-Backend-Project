@@ -25,7 +25,7 @@ router.get(
 
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
+  passport.authenticate("google", { failureRedirect: "/signin" }),
   (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "User authentication failed" });
@@ -42,7 +42,7 @@ router.get("/github", passport.authenticate("github"));
 
 router.get(
   "/github/callback",
-  passport.authenticate("github", { failureRedirect: "/login" }),
+  passport.authenticate("github", { failureRedirect: "/signin" }),
   (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "User authentication failed" });
@@ -55,12 +55,12 @@ router.get(
 );
 
 // Logout Route
-router.get("/logout", (req, res, next) => {
+router.get("/signout", (req, res, next) => {
   req.logout((err) => {
     if (err) {
       return res.status(500).json({ message: "Logout failed" });
     }
-    res.redirect("/");
+    res.redirect("/signin");
   });
 
   next();
