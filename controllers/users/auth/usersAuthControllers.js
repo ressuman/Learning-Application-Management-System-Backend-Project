@@ -70,6 +70,7 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
 
     createSendToken(
       newUser,
+      "user",
       201,
       res,
       "User created successfully. Please check your email for the OTP."

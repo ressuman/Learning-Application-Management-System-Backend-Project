@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import bcrypt from "bcryptjs";
 
 const adminSchema = mongoose.Schema(
   {
@@ -27,7 +28,7 @@ const adminSchema = mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      validator: [validator.isEmail, "Please enter a valid email address"],
+      validate: [validator.isEmail, "Please enter a valid email address"],
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"],
     },
 
@@ -68,34 +69,39 @@ const adminSchema = mongoose.Schema(
     OTP: {
       type: String,
       default: null,
-      select: false,
     },
 
     OTPExpires: {
       type: Date,
       default: null,
-      select: false,
     },
 
     resetPasswordOTP: {
       type: String,
       default: null,
-      select: false,
     },
 
     resetPasswordOTPExpires: {
       type: Date,
       default: null,
-      select: false,
-    },
-
-    created_at: {
-      type: Date,
-      default: Date.now,
     },
   },
   { timestamps: true }
 );
+
+adminSchema.pre("save", function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = bcrypt.hashSync(this.password, 12);
+
+  this.passwordConfirm = undefined;
+
+  next();
+});
+
+adminSchema.methods.correctPassword = async function (password, userPassword) {
+  return await bcrypt.compare(password, userPassword);
+};
 
 const Admin = mongoose.model("Admin", adminSchema);
 

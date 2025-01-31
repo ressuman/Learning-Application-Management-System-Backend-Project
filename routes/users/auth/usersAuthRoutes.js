@@ -7,6 +7,7 @@ import {
   userLogout,
   userSignUp,
 } from "../../../controllers/users/auth/usersAuthControllers.js";
+
 import { createSendToken } from "../../../utils/createToken.js";
 
 const router = express.Router();
@@ -31,7 +32,13 @@ router.get(
       return res.status(401).json({ message: "User authentication failed" });
     }
 
-    createSendToken(req.user, 200, res, "Logged in successfully with Google");
+    createSendToken(
+      req.user,
+      "user",
+      200,
+      res,
+      "Logged in successfully with Google"
+    );
 
     res.redirect("http://localhost:5173/dashboard"); // Redirect to frontend
   }
@@ -48,7 +55,13 @@ router.get(
       return res.status(401).json({ message: "User authentication failed" });
     }
 
-    createSendToken(req.user, 200, res, "Logged in successfully with GitHub");
+    createSendToken(
+      req.user,
+      "user",
+      200,
+      res,
+      "Logged in successfully with GitHub"
+    );
 
     res.redirect("http://localhost:5173/dashboard"); // Redirect to frontend
   }
