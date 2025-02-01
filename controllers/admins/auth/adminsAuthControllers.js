@@ -89,7 +89,34 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
   }
 });
 
-export const adminLogin = asyncHandler(async (req, res, next) => {});
+export const adminLogin = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new IndexError("Please provide email and password", 400));
+  }
+
+  const admin = await Admin.findOne({ email }).select("+password");
+
+  if (!admin) {
+    return next(new IndexError("Invalid credentials", 401));
+  }
+
+  if (!admin.isVerified) {
+    return next(
+      new IndexError(
+        "Your account is not verified. Please verify your email",
+        401
+      )
+    );
+  }
+
+  if (!admin || !(await admin.correctPassword(password, admin.password))) {
+    return next(new IndexError("Invalid credentials", 401));
+  }
+
+  createSendToken(admin, 200, res, "Admin logged in successfully");
+});
 
 export const adminLogout = asyncHandler(async (req, res, next) => {
   res.cookie("token", "Admin-logged-out", {
