@@ -23,6 +23,11 @@ export const usersAccountVerification = asyncHandler(async (req, res, next) => {
     return next(new IndexError("User not found", 404));
   }
 
+  // if the user is already verified
+  if (user.isVerified) {
+    return next(new IndexError("This user account is already verified", 400));
+  }
+
   // Ensure the user.OTP exists
   if (!user.OTP) {
     return next(new IndexError("No OTP found for this user", 400));
@@ -37,6 +42,7 @@ export const usersAccountVerification = asyncHandler(async (req, res, next) => {
 
   // Compare the provided OTP with the hashed OTP in the database
   const isMatch = await bcrypt.compare(OTP, user.OTP);
+
   if (!isMatch) {
     return next(new IndexError("Invalid OTP. Please try again.", 400));
   }

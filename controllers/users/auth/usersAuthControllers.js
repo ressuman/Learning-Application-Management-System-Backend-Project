@@ -125,7 +125,7 @@ export const userLogin = asyncHandler(async (req, res, next) => {
 });
 
 export const userLogout = asyncHandler(async (req, res, next) => {
-  res.cookie("token", "Logged-Out", {
+  res.cookie("token", "User-logged-out", {
     expires: new Date(Date.now() + 10 * 1000), //expires in 10 seconds
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

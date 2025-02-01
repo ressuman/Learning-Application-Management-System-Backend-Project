@@ -91,4 +91,15 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
 
 export const adminLogin = asyncHandler(async (req, res, next) => {});
 
-export const adminLogout = asyncHandler(async (req, res, next) => {});
+export const adminLogout = asyncHandler(async (req, res, next) => {
+  res.cookie("token", "Admin-logged-out", {
+    expires: new Date(Date.now() + 10 * 1000), //expires in 10 seconds
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Admin logged out successfully",
+  });
+});

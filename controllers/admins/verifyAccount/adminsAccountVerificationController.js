@@ -1,13 +1,69 @@
+import bcrypt from "bcryptjs";
 import sendEmail from "../../../helpers/email.js";
 import asyncHandler from "../../../middlewares/asyncHandler.js";
 import IndexError from "../../../middlewares/indexError.js";
 import Admin from "../../../models/users/adminModel.js";
 import { generateOTP } from "../../../utils/generateOTP.js";
 import dotenv from "dotenv";
+import { createSendToken } from "../../../utils/createToken.js";
 dotenv.config();
 
 export const adminsAccountVerification = asyncHandler(
-  async (req, res, next) => {}
+  async (req, res, next) => {
+    const { OTP } = req.body;
+
+    // Check if OTP is provided
+    if (!OTP) {
+      return next(new IndexError("Please provide the OTP", 400));
+    }
+
+    // Get the authenticated admin
+    const admin = req.admin;
+
+    if (!admin) {
+      return next(new IndexError("Admin not found", 404));
+    }
+
+    // If the admin is already verified
+    if (admin.isVerified) {
+      return next(
+        new IndexError("This admin account is already verified", 400)
+      );
+    }
+
+    // Ensure the admin.OTP exists
+    if (!admin.OTP) {
+      return next(new IndexError("No OTP found for this admin", 400));
+    }
+
+    // Check if OTP has expired
+    if (Date.now() > admin.OTPExpires) {
+      return next(
+        new IndexError("OTP has expired. Please request a new one.", 400)
+      );
+    }
+
+    // Compare the provided OTP with the hashed OTP in the database
+    const isMatch = await bcrypt.compare(OTP, admin.OTP);
+
+    if (!isMatch) {
+      return next(new IndexError("Invalid OTP. Please try again.", 400));
+    }
+
+    // Mark the admin's account as verified
+    admin.isVerified = true;
+    admin.OTP = undefined; // Remove OTP from the database
+    admin.OTPExpires = undefined; // Remove expiration time
+
+    await admin.save({ validateBeforeSave: false });
+
+    createSendToken(
+      admin,
+      200,
+      res,
+      "Email verification successful. Your email is now verified."
+    );
+  }
 );
 
 export const adminsResendAccountVerification = asyncHandler(
