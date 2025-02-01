@@ -37,7 +37,8 @@ import IndexError from "./indexError.js";
 
 export const authorizeRole = (requiredRole) =>
   asyncHandler(async (req, res, next) => {
-    const { role } = req.user || req.admin; // Get role from decoded token
+    // const { role } = req.user || req.admin; // Get role from decoded token
+    const role = req.user?.role || req.admin?.role;
 
     if (!role) {
       return next(

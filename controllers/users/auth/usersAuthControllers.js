@@ -16,9 +16,18 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
 
   const { OTP, hashedOTP } = await generateOTP();
 
-  const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
+  // const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
+  const OTPExpires = new Date(Date.now() + 15 * 60 * 1000);
 
-  const newUser = await User.create({
+  // const newUser = await User.create({
+  //   username,
+  //   email,
+  //   password,
+  //   //passwordConfirm,
+  //   OTP: hashedOTP,
+  //   OTPExpires,
+  // });
+  const newUser = new User({
     username,
     email,
     password,
@@ -27,8 +36,9 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
     OTPExpires,
   });
 
-  try {
-    const emailTemplate = `
+  await newUser.save();
+
+  const emailTemplate = `
    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif; color: #333;">
     <div style="text-align: center; padding: 10px 0;">
       <img src="http://localhost:4039/public/gclient-logo" alt="G Client Logo" style="max-width: 150px; margin-bottom: 20px;" />
@@ -59,6 +69,7 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
   </div>
   `;
 
+  try {
     await sendEmail({
       email: newUser.email,
       subject: "Your OTP for Email Verification (Valid for 15 Minutes)",
@@ -70,13 +81,14 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
 
     createSendToken(
       newUser,
-      "user",
       201,
       res,
       "User created successfully. Please check your email for the OTP."
     );
   } catch (error) {
-    await User.findByIdAndDelete(newUser._id);
+    //await User.findByIdAndDelete(newUser._id);
+    await User.deleteOne({ _id: newUser._id });
+
     return next(
       new IndexError("Email could not be sent. Please try again", 500)
     );

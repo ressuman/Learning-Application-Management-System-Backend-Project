@@ -6,11 +6,22 @@ import {
 } from "../../../controllers/users/verifyAccount/usersAccountVerificationControllers.js";
 
 import { isUserAuthenticated } from "../../../middlewares/isAuthenticated.js";
+import { authorizeRole } from "../../../middlewares/authorizeRole.js";
 
 const router = express.Router();
 
-router.post("/verify-account", isUserAuthenticated, usersAccountVerification);
+router.post(
+  "/verify-account",
+  isUserAuthenticated,
+  authorizeRole("user"),
+  usersAccountVerification
+);
 
-router.post("/resend-OTP", isUserAuthenticated, usersResendAccountVerification);
+router.post(
+  "/resend-OTP",
+  isUserAuthenticated,
+  authorizeRole("user"),
+  usersResendAccountVerification
+);
 
 export default router;

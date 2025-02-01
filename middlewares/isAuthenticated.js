@@ -32,6 +32,7 @@ export const isUserAuthenticated = asyncHandler(async (req, res, next) => {
   }
 
   req.user = currentUser;
+  req.user.role = decoded.role;
 
   next();
 });
@@ -62,6 +63,7 @@ export const isAdminAuthenticated = asyncHandler(async (req, res, next) => {
   }
 
   req.admin = currentAdmin; // Attach admin to request
+  req.admin.role = decoded.role;
 
   next();
 });
