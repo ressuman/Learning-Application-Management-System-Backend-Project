@@ -97,7 +97,7 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
       newAdmin,
       201,
       res,
-      "Admin created successfully. Please check your email for the OTP."
+      "Admin created successfully. Please check your email for the OTP for verification."
     );
   } catch (error) {
     //await Admin.findByIdAndDelete(newAdmin._id);

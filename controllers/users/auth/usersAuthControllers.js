@@ -83,7 +83,7 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
       newUser,
       201,
       res,
-      "User created successfully. Please check your email for the OTP."
+      "User created successfully. Please check your email for the OTP for verification."
     );
   } catch (error) {
     //await User.findByIdAndDelete(newUser._id);
