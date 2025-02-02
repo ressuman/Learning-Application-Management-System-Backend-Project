@@ -9,7 +9,7 @@ import cors from "cors";
 import morgan from "morgan";
 import passport from "passport";
 import "./config/passport/passport.js";
-import twilio from "twilio";
+//import twilio from "twilio";
 
 // Utilities
 import connectDB from "./config/db.js";
@@ -51,11 +51,11 @@ app.use(
   })
 );
 
-// Initialize Twilio
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// // Initialize Twilio
+// const client = twilio(
+//   process.env.TWILIO_ACCOUNT_SID,
+//   process.env.TWILIO_AUTH_TOKEN
+// );
 
 app.use(morgan("dev")); // Logging requests
 app.use(express.json({ limit: "1mb" }));

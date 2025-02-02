@@ -8,12 +8,29 @@ import {
 
 import { isUserAuthenticated } from "../../../middlewares/isAuthenticated.js";
 
+import { authorizeRole } from "../../../middlewares/authorizeRole.js";
+
 const router = express.Router();
 
-router.get("/get-profile", isUserAuthenticated, getUserProfile);
+router.get(
+  "/get-profile",
+  isUserAuthenticated,
+  authorizeRole("user"),
+  getUserProfile
+);
 
-router.put("/update-profile", isUserAuthenticated, updateUserProfile);
+router.put(
+  "/update-profile",
+  isUserAuthenticated,
+  authorizeRole("user"),
+  updateUserProfile
+);
 
-router.delete("/delete-profile", isUserAuthenticated, deleteUserProfile);
+router.delete(
+  "/delete-profile",
+  isUserAuthenticated,
+  authorizeRole("user"),
+  deleteUserProfile
+);
 
 export default router;

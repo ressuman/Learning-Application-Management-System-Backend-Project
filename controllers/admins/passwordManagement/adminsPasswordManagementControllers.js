@@ -4,6 +4,7 @@ import Admin from "../../../models/users/adminModel.js";
 import IndexError from "../../../middlewares/indexError.js";
 import { generateOTP } from "../../../utils/generateOTP.js";
 import { createSendToken } from "../../../utils/createToken.js";
+import sendEmail from "../../../helpers/email.js";
 
 export const adminForgotPassword = asyncHandler(async (req, res, next) => {
   const { email } = req.body;

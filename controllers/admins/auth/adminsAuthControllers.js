@@ -4,6 +4,14 @@ import IndexError from "../../../middlewares/indexError.js";
 import Admin from "../../../models/users/adminModel.js";
 import { createSendToken } from "../../../utils/createToken.js";
 import { generateOTP } from "../../../utils/generateOTP.js";
+//import twilio from "twilio";
+import dotenv from "dotenv";
+dotenv.config();
+
+// const client = twilio(
+//   process.env.TWILIO_ACCOUNT_SID,
+//   process.env.TWILIO_AUTH_TOKEN
+// );
 
 export const adminSignUp = asyncHandler(async (req, res, next) => {
   const { first_name, last_name, email, password, passwordConfirm, contact } =
@@ -31,6 +39,11 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
   });
 
   await newAdmin.save();
+
+  // // Format the phone number for Twilio
+  // const formattedContact = contact.startsWith("+")
+  //   ? contact
+  //   : `+233${contact.slice(1)}`;
 
   const emailTemplate = `
    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif; color: #333;">
@@ -72,6 +85,13 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
         process.env.APP_NAME || "G_Client"
       } Team.`,
     });
+
+    // // Send OTP via SMS using Twilio
+    // await client.messages.create({
+    //   body: `Hello ${first_name} ${last_name}, your OTP for verification is: ${OTP}. It expires in 15 minutes.`,
+    //   from: process.env.TWILIO_PHONE_NUMBER,
+    //   to: formattedContact,
+    // });
 
     createSendToken(
       newAdmin,
