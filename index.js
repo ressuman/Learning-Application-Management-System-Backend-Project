@@ -23,6 +23,7 @@ import authAdminRoutes from "./routes/admins/auth/adminsAuthRoutes.js";
 import verifyAdminAccountRoutes from "./routes/admins/verifyAccount/adminsAccountVerificationRoutes.js";
 import passwordAdminManagementRoutes from "./routes/admins/passwordManagement/adminsPasswordManagementRoutes.js";
 import profileAdminManagementRoutes from "./routes/admins/profileManagement/adminsProfileManagementRoutes.js";
+import accountsManagementRoutes from "./routes/admins/accountUserAndAdminManagement/userAndAdminAccountManagementRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT_NUMBER || 4200;
@@ -82,13 +83,14 @@ app.get("/profile", (req, res) => {
 });
 
 app.use("/api/v1/auth/user", authUserRoutes);
-app.use("/api/v1/auth/user", verifyUserAccountRoutes);
-app.use("/api/v1/auth/user", passwordUserManagementRoutes);
-app.use("/api/v1/auth/user", profileUserManagementRoutes);
+app.use("/api/v1/otp/user", verifyUserAccountRoutes);
+app.use("/api/v1/password/user", passwordUserManagementRoutes);
+app.use("/api/v1/profile/user", profileUserManagementRoutes);
 app.use("/api/v1/auth/admin", authAdminRoutes);
-app.use("/api/v1/auth/admin", verifyAdminAccountRoutes);
-app.use("/api/v1/auth/admin", passwordAdminManagementRoutes);
-app.use("/api/v1/auth/admin", profileAdminManagementRoutes);
+app.use("/api/v1/otp/admin", verifyAdminAccountRoutes);
+app.use("/api/v1/password/admin", passwordAdminManagementRoutes);
+app.use("/api/v1/profile/admin", profileAdminManagementRoutes);
+app.use("/api/v1/accounts/admin", accountsManagementRoutes);
 
 // Error Handling Middleware
 app.all("*", (err, req, res) => {
