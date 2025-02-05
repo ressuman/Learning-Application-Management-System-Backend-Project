@@ -16,17 +16,8 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
 
   const { OTP, hashedOTP } = await generateOTP();
 
-  // const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
-  const OTPExpires = new Date(Date.now() + 15 * 60 * 1000);
+  const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
 
-  // const newUser = await User.create({
-  //   username,
-  //   email,
-  //   password,
-  //   //passwordConfirm,
-  //   OTP: hashedOTP,
-  //   OTPExpires,
-  // });
   const newUser = new User({
     username,
     email,
@@ -79,12 +70,17 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
       } Team.`,
     });
 
-    createSendToken(
-      newUser,
-      201,
-      res,
-      "User created successfully. Please check your email for the OTP for verification."
-    );
+    // createSendToken(
+    //   newUser,
+    //   201,
+    //   res,
+    //   "User created successfully. Please check your email for the OTP for verification."
+    // );
+    res.status(201).json({
+      status: "success",
+      message:
+        "User registered successfully. Please check your email for the OTP for email verification to activate your account.",
+    });
   } catch (error) {
     //await User.findByIdAndDelete(newUser._id);
     await User.deleteOne({ _id: newUser._id });

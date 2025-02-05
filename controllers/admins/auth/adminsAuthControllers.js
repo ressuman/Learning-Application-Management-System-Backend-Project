@@ -25,7 +25,7 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
 
   const { OTP, hashedOTP } = await generateOTP();
 
-  const OTPExpires = new Date(Date.now() + 15 * 60 * 1000);
+  const OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
 
   const newAdmin = new Admin({
     first_name,
@@ -93,12 +93,17 @@ export const adminSignUp = asyncHandler(async (req, res, next) => {
     //   to: formattedContact,
     // });
 
-    createSendToken(
-      newAdmin,
-      201,
-      res,
-      "Admin created successfully. Please check your email for the OTP for verification."
-    );
+    // createSendToken(
+    //   newAdmin,
+    //   201,
+    //   res,
+    //   "Admin created successfully. Please check your email for the OTP for verification."
+    // );
+    res.status(201).json({
+      status: "success",
+      message:
+        "Admin registered successfully. Please check your email for the OTP for email verification to activate your account.",
+    });
   } catch (error) {
     //await Admin.findByIdAndDelete(newAdmin._id);
     await Admin.deleteOne({ _id: newAdmin._id });

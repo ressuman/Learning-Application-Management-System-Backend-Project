@@ -10,15 +10,14 @@ dotenv.config();
 
 export const adminsAccountVerification = asyncHandler(
   async (req, res, next) => {
-    const { OTP } = req.body;
+    const { email, OTP } = req.body;
 
     // Check if OTP is provided
-    if (!OTP) {
-      return next(new IndexError("Please provide the OTP", 400));
+    if (!email || !OTP) {
+      return next(new IndexError("Please provide both email and OTP", 400));
     }
 
-    // Get the authenticated admin
-    const admin = req.admin;
+    const admin = await Admin.findOne({ email });
 
     if (!admin) {
       return next(new IndexError("Admin not found", 404));
@@ -68,7 +67,7 @@ export const adminsAccountVerification = asyncHandler(
 
 export const adminsResendAccountVerification = asyncHandler(
   async (req, res, next) => {
-    const { email } = req.admin;
+    const { email } = req.body;
 
     // Check if email is provided
     if (!email) {
@@ -96,7 +95,7 @@ export const adminsResendAccountVerification = asyncHandler(
 
     // Update the admin's OTP and OTPExpires
     admin.OTP = hashedOTP;
-    admin.OTPExpires = new Date(Date.now() + 15 * 60 * 1000);
+    admin.OTPExpires = Date.now() + 15 * 60 * 1000; // Expiry is 15 minutes from now
 
     await admin.save({ validateBeforeSave: false });
 

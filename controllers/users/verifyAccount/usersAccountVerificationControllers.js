@@ -9,15 +9,14 @@ import sendEmail from "../../../helpers/email.js";
 dotenv.config();
 
 export const usersAccountVerification = asyncHandler(async (req, res, next) => {
-  const { OTP } = req.body;
+  const { email, OTP } = req.body;
 
   // Check if OTP is provided
-  if (!OTP) {
-    return next(new IndexError("Please provide the OTP", 400));
+  if (!email || !OTP) {
+    return next(new IndexError("Please provide both email and OTP", 400));
   }
 
-  // Get the authenticated user
-  const user = req.user;
+  const user = await User.findOne({ email });
 
   if (!user) {
     return next(new IndexError("User not found", 404));
@@ -64,7 +63,7 @@ export const usersAccountVerification = asyncHandler(async (req, res, next) => {
 
 export const usersResendAccountVerification = asyncHandler(
   async (req, res, next) => {
-    const { email } = req.user;
+    const { email } = req.body;
 
     // Check if the email is provided
     if (!email) {
@@ -132,10 +131,162 @@ export const usersResendAccountVerification = asyncHandler(
     } catch (error) {
       user.OTP = undefined; // Remove the OTP
       user.OTPExpires = undefined; // Remove the expiration time
+
       await user.save({ validateBeforeSave: false });
 
       return next(
         new IndexError("Failed to resend OTP. Please try again later.", 500)
+      );
+    }
+  }
+);
+
+// Verify OTP for admin-created profile
+export const verifyOTPForAdminCreatedProfile = asyncHandler(
+  async (req, res, next) => {
+    const { email, OTP } = req.body;
+
+    // Check if email and OTP are provided
+    if (!email || !OTP) {
+      return next(new IndexError("Email and OTP are required", 400));
+    }
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    // If the user doesn't exist, return an error
+    if (!user) {
+      return next(new IndexError("User not found", 404));
+    }
+
+    if (user.isVerified) {
+      return next(new IndexError("Account already verified", 400));
+    }
+
+    // Ensure the user.OTP exists
+    if (!user.OTP) {
+      return next(new IndexError("No OTP found for this user", 400));
+    }
+
+    // Check if the OTP has expired
+    if (user.OTPExpires < Date.now()) {
+      return next(
+        new IndexError("OTP has expired. Please request a new one.", 400)
+      );
+    }
+
+    // Verify the OTP
+    const isOTPValid = await bcrypt.compare(OTP, user.OTP);
+
+    if (!isOTPValid) {
+      return next(new IndexError("Invalid OTP. Please try again", 400));
+    }
+
+    // Activate the account
+    user.isVerified = true;
+    user.OTP = undefined;
+    user.OTPExpires = undefined;
+
+    // Save the updated user
+    await user.save({ validateBeforeSave: false });
+
+    // Send the response
+    // res.status(200).json({
+    //   status: "success",
+    //   message: "Account verified successfully. You can now log in.",
+    //   data: {
+    //     user: {
+    //       _id: user._id,
+    //       username: user.username,
+    //       email: user.email,
+    //       isVerified: user.isVerified,
+    //     },
+    //   },
+    // });
+    createSendToken(
+      user,
+      200,
+      res,
+      "Account verified successfully. You can now log in."
+    );
+  }
+);
+
+// Resend OTP for admin-created profile
+export const resendOTPForAdminCreatedProfile = asyncHandler(
+  async (req, res, next) => {
+    const { email } = req.body;
+
+    // Check if email is provided
+    if (!email) {
+      return next(new IndexError("Email is required", 400));
+    }
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    // If the user doesn't exist, return an error
+    if (!user) {
+      return next(new IndexError("User not found", 404));
+    }
+
+    // Ensure the account is not already verified
+    if (user.isVerified) {
+      return next(new IndexError("Account already verified", 400));
+    }
+
+    // Generate a new OTP and hashed OTP
+    const { OTP, hashedOTP } = await generateOTP();
+
+    // Set OTP expiration time (15 minutes from now)
+    const OTPExpires = Date.now() + 15 * 60 * 1000;
+
+    // Update the user's OTP and OTP expiration time
+    user.OTP = hashedOTP;
+    user.OTPExpires = OTPExpires;
+
+    // Save the updated user
+    await user.save({ validateBeforeSave: false });
+
+    // Send the new OTP via email
+    const emailTemplate = `
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; font-family: Arial, sans-serif; color: #333;">
+        <h2 style="color: #0056b3; text-align: center;">New OTP for Account Verification</h2>
+        <p style="font-size: 16px;">Dear <strong>${user.username}</strong>,</p>
+        <p style="font-size: 16px;">A new OTP has been generated for your account verification. Please use the OTP below to verify your email address:</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <span style="font-size: 28px; font-weight: bold; color: #0056b3; border: 1px dashed #ddd; padding: 10px 20px; display: inline-block; background-color: #fff;">
+            ${OTP}
+          </span>
+        </div>
+        <p style="font-size: 16px; text-align: center;">This OTP is valid for <strong>15 minutes</strong>. Please do not share this OTP with anyone.</p>
+        <p style="font-size: 14px; text-align: center; color: #888;">If you did not request this OTP, please ignore this email or contact support.</p>
+      </div>
+    `;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "New OTP for Account Verification",
+        html: emailTemplate,
+        message: `Dear ${
+          user.username
+        },\n\nA new OTP has been generated for your account verification. Please use the OTP below to verify your email address:\n\nOTP: ${OTP}\n\nThis OTP is valid for 15 minutes.\n\nIf you did not request this OTP, please ignore this email or contact support.\n\nBest regards,\nThe ${
+          process.env.APP_NAME || "G_Client"
+        } Team.`,
+      });
+
+      res.status(200).json({
+        status: "success",
+        message: "A new OTP has been sent to your email.",
+      });
+    } catch (error) {
+      user.OTP = undefined; // Remove the OTP
+      user.OTPExpires = undefined; // Remove the expiration time
+
+      await user.save({ validateBeforeSave: false });
+      return next(
+        new IndexError("Email could not be sent. Please try again", 500)
       );
     }
   }

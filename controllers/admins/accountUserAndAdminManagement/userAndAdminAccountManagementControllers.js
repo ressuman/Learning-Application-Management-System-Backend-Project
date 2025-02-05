@@ -37,7 +37,7 @@ export const createUserProfile = asyncHandler(async (req, res, next) => {
   //  Generate OTP and hashed OTP
   const { OTP, hashedOTP } = await generateOTP();
 
-  const OTPExpires = new Date(Date.now() + 15 * 60 * 1000);
+  const OTPExpires = Date.now() + 15 * 60 * 1000;
 
   // Create new user
   const newUser = new User({
@@ -104,15 +104,15 @@ export const createUserProfile = asyncHandler(async (req, res, next) => {
     res.status(201).json({
       status: "success",
       message:
-        "User profile created successfully. Please check your email for the OTP for verification.",
-      data: {
-        user: newUser,
-      },
+        "User profile created successfully. Please check your email for the OTP for verification to activate your account.",
     });
   } catch (error) {
-    await User.findByIdAndDelete(newUser._id);
+    //await User.findByIdAndDelete(newUser._id);
+    await User.deleteOne({ _id: newUser._id });
 
-    return next(new IndexError("Email could not be sent", 500));
+    return next(
+      new IndexError("Email could not be sent. Please try again", 500)
+    );
   }
 });
 
