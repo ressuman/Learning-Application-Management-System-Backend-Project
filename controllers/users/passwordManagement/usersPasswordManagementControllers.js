@@ -128,10 +128,16 @@ export const userResetPassword = asyncHandler(async (req, res, next) => {
   await user.save();
 
   // Success response
-  createSendToken(
-    user,
-    200,
-    res,
-    "Password reset successfully. You can now log in with your new password."
-  );
+  // createSendToken(
+  //   user,
+  //   200,
+  //   res,
+  //   "Password reset successfully. You can now log in with your new password."
+  // );
+
+  res.status(200).json({
+    status: "success",
+    message:
+      "Password reset successfully.Please you can now log in with your new password.",
+  });
 });

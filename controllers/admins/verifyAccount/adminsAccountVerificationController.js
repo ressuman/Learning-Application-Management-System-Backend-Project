@@ -60,7 +60,7 @@ export const adminsAccountVerification = asyncHandler(
       admin,
       200,
       res,
-      "Email verification successful. Your email is now verified."
+      "Email verification successful. Your email is now verified. This admin account has been activated."
     );
   }
 );

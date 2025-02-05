@@ -57,7 +57,7 @@ export const usersAccountVerification = asyncHandler(async (req, res, next) => {
     user,
     200,
     res,
-    "Email verification successful. Your email is now verified."
+    "Email verification successful. Your email is now verified. This user account has been activated."
   );
 });
 
@@ -207,7 +207,7 @@ export const verifyOTPForAdminCreatedProfile = asyncHandler(
       user,
       200,
       res,
-      "Account verified successfully. You can now log in."
+      "Your user account verified successfully. You can now log in."
     );
   }
 );
