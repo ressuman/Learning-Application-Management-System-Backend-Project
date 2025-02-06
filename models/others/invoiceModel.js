@@ -16,7 +16,7 @@ const invoiceSchema = new mongoose.Schema(
 
     amount: {
       type: Number,
-      required: true,
+      required: [true, "Amount is required"],
       min: 0,
     },
 
@@ -28,7 +28,7 @@ const invoiceSchema = new mongoose.Schema(
 
     dueDate: {
       type: Date,
-      required: true,
+      required: [true, "Due date is required"],
     },
 
     status: {

@@ -24,7 +24,7 @@ const revenueSchema = new mongoose.Schema(
         },
         amount: {
           type: Number,
-          required: true,
+          required: [true, "Amount is required"],
           min: 0,
         },
       },

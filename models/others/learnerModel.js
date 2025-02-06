@@ -5,19 +5,19 @@ const learnerSchema = new mongoose.Schema(
   {
     firstname: {
       type: String,
-      required: true,
+      required: [true, "First name is required"],
       trim: true,
     },
 
     lastname: {
       type: String,
-      required: true,
+      required: [true, "Last name is required"],
       trim: true,
     },
 
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -28,17 +28,17 @@ const learnerSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: true,
+      required: [true, "Gender is required"],
     },
 
     location: {
       type: String,
-      required: true,
+      required: [true, "Location is required"],
     },
 
     phone: {
       type: String,
-      required: true,
+      required: [true, "Phone number is required"],
       unique: true,
     },
 
@@ -60,7 +60,7 @@ const learnerSchema = new mongoose.Schema(
 
     amount: {
       type: Number,
-      required: true,
+      required: [true, "Amount is required"],
       min: 0,
     },
 

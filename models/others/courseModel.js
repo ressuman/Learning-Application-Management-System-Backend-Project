@@ -4,23 +4,23 @@ const courseSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true,
+      required: [true, "Title is required"],
       trim: true,
     },
 
     description: {
       type: String,
-      required: true,
+      required: [true, "Description is required"],
     },
 
     duration: {
       type: String,
-      required: true,
+      required: [true, "Duration is required"],
     },
 
     price: {
       type: Number,
-      required: true,
+      required: [true, "Price is required"],
     },
 
     learners: [
