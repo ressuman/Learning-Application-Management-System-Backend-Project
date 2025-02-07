@@ -1,6 +1,32 @@
 import asyncHandler from "./asyncHandler.js";
 import IndexError from "./indexError.js";
 
+export const authorizeRole = (requiredRole) =>
+  asyncHandler(async (req, res, next) => {
+    // const { role } = req.user || req.admin; // Get role from decoded token
+    const role = req.user?.role || req.admin?.role;
+
+    if (!role) {
+      return next(
+        new IndexError("Access denied. Please log in. No role found", 401)
+      );
+    }
+
+    // Allow access if:
+    // - The user has the required role
+    // - OR the user is an admin accessing a user-specific route
+    if (role !== requiredRole && role !== "admin") {
+      return next(
+        new IndexError(
+          `Access denied. You do not have permission to access this resource. Required role: ${requiredRole}`,
+          403
+        )
+      );
+    }
+
+    next();
+  });
+
 // export const authorizeRole = (role) => {
 //   return (req, res, next) => {
 //     if (req.user && role === "user") {
@@ -34,29 +60,3 @@ import IndexError from "./indexError.js";
 
 //     next();
 //   });
-
-export const authorizeRole = (requiredRole) =>
-  asyncHandler(async (req, res, next) => {
-    // const { role } = req.user || req.admin; // Get role from decoded token
-    const role = req.user?.role || req.admin?.role;
-
-    if (!role) {
-      return next(
-        new IndexError("Access denied. Please log in. No role found", 401)
-      );
-    }
-
-    // Allow access if:
-    // - The user has the required role
-    // - OR the user is an admin accessing a user-specific route
-    if (role !== requiredRole && role !== "admin") {
-      return next(
-        new IndexError(
-          `Access denied. You do not have permission to access this resource. Required role: ${requiredRole}`,
-          403
-        )
-      );
-    }
-
-    next();
-  });

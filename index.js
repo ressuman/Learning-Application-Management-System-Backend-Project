@@ -24,6 +24,10 @@ import verifyAdminAccountRoutes from "./routes/admins/verifyAccount/adminsAccoun
 import passwordAdminManagementRoutes from "./routes/admins/passwordManagement/adminsPasswordManagementRoutes.js";
 import profileAdminManagementRoutes from "./routes/admins/profileManagement/adminsProfileManagementRoutes.js";
 import accountsManagementRoutes from "./routes/admins/accountUserAndAdminManagement/userAndAdminAccountManagementRoutes.js";
+import learnerRoutes from "./routes/others/learnerRoutes.js";
+import courseRoutes from "./routes/others/courseRoutes.js";
+import invoiceRoutes from "./routes/others/invoiceRoutes.js";
+import revenueRoutes from "./routes/others/revenueRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT_NUMBER || 4200;
@@ -91,6 +95,10 @@ app.use("/api/v1/otp/admin", verifyAdminAccountRoutes);
 app.use("/api/v1/password/admin", passwordAdminManagementRoutes);
 app.use("/api/v1/profile/admin", profileAdminManagementRoutes);
 app.use("/api/v1/accounts/admin", accountsManagementRoutes);
+app.use("/api/v1/learners/admin", learnerRoutes);
+app.use("/api/v1/courses/admin", courseRoutes);
+app.use("/api/v1/invoices/admin", invoiceRoutes);
+app.use("/api/v1/revenues/admin", revenueRoutes);
 
 // Error Handling Middleware
 app.all("*", (err, req, res) => {

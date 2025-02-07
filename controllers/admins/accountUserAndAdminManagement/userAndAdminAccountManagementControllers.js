@@ -244,7 +244,8 @@ export const getAllAdminsAndUsers = asyncHandler(async (req, res, next) => {
     totalAdmins,
     totalUsers,
     currentPage: page,
-    totalPages: Math.ceil(totalAdmins / limit),
+    totalAdminPages: Math.ceil(totalAdmins / limit),
+    totalUserPages: Math.ceil(totalUsers / limit),
     data: { admins, users },
   });
 });
