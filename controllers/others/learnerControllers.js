@@ -9,7 +9,7 @@ import Learner from "../../models/others/learnerModel.js";
  * @access Private (Admin)
  */
 export const createLearner = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can create a new learner
   if (!admin) {
@@ -82,7 +82,7 @@ export const createLearner = asyncHandler(async (req, res, next) => {
  * @access Private (Admin)
  */
 export const getLearners = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can view all learners
   if (!admin) {
@@ -120,7 +120,7 @@ export const getLearners = asyncHandler(async (req, res, next) => {
  * @access Private (Admin, Learner themselves)
  */
 export const getLearner = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
   //const user = req.user;
 
   // Extract learnerId from the request parameters
@@ -169,7 +169,7 @@ export const getLearner = asyncHandler(async (req, res, next) => {
  * @access Private (Admin, Learner themselves)
  */
 export const updateLearner = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
   //const user = req.user;
 
   // Extract learnerId from the request parameters
@@ -239,17 +239,39 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
   }
 
   // Update learner details
-  if (firstname) learner.firstname = firstname;
-  if (lastname) learner.lastname = lastname;
-  if (email) learner.email = email;
-  if (gender) learner.gender = gender;
-  if (location) learner.location = location;
-  if (phone) learner.phone = phone;
-  if (disability) learner.disability = disability;
-  if (image) learner.image = image;
-  if (description) learner.description = description;
-  if (amount) learner.amount = amount;
-  if (courses) learner.courses = courses;
+  if (firstname) {
+    learner.firstname = firstname;
+  }
+  if (lastname) {
+    learner.lastname = lastname;
+  }
+  if (email) {
+    learner.email = email;
+  }
+  if (gender) {
+    learner.gender = gender;
+  }
+  if (location) {
+    learner.location = location;
+  }
+  if (phone) {
+    learner.phone = phone;
+  }
+  if (disability) {
+    learner.disability = disability;
+  }
+  if (image) {
+    learner.image = image;
+  }
+  if (description) {
+    learner.description = description;
+  }
+  if (amount) {
+    learner.amount = amount;
+  }
+  if (courses) {
+    learner.courses = courses;
+  }
 
   // Save the updated learner details to the database
   const updatedLearner = await learner.save({ validateBeforeSave: true });
@@ -267,7 +289,7 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
  * @access Private (Admin)
  */
 export const deleteLearner = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   if (admin) {
     return next(

@@ -2,7 +2,7 @@ import express from "express";
 
 import {
   isAdminAuthenticated,
-  isUserAuthenticated,
+  //isUserAuthenticated,
 } from "../../middlewares/isAuthenticated.js";
 
 import { authorizeRole } from "../../middlewares/authorizeRole.js";
