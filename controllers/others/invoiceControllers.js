@@ -46,14 +46,16 @@ export const createInvoice = asyncHandler(async (req, res, next) => {
   }
 
   // Create a new invoice
-  const invoice = await Invoice.create({
-    learner: learnerId,
-    course: courseId,
+  const invoice = new Invoice({
+    learnerId,
+    courseId,
     amount,
     description,
     dueDate,
     status,
   });
+
+  await invoice.save();
 
   res.status(201).json({
     success: true,
@@ -77,13 +79,20 @@ export const getInvoices = asyncHandler(async (req, res, next) => {
     );
   }
 
+  const { status } = req.query;
+  const filter = status ? { status } : {};
+
   // Pagination setup
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const invoices = await Invoice.find()
-    .populate("learner course")
+  const invoices = await Invoice.find(filter)
+    .populate({
+      path: "learnerId",
+      populate: { path: "user" },
+    })
+    .populate("courseId")
     .skip(skip)
     .limit(limit);
 
@@ -122,7 +131,9 @@ export const getInvoice = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Invoice ID is required", 400));
   }
 
-  const invoice = await Invoice.findById(invoiceId).populate("learner course");
+  const invoice = await Invoice.findById(invoiceId).populate(
+    "learnerId courseId"
+  );
 
   if (!invoice) {
     return next(new IndexError("Invoice not found", 404));
@@ -164,6 +175,28 @@ export const updateInvoice = asyncHandler(async (req, res, next) => {
 
   if (!invoice) {
     return next(new IndexError("Invoice not found", 404));
+  }
+
+  // Validate learner and course exist if provided
+  if (learnerId) {
+    const learner = await Learner.findById(learnerId);
+    if (!learner) {
+      return next(new IndexError("Learner not found", 404));
+    }
+  }
+
+  if (courseId) {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return next(new IndexError("Course not found", 404));
+    }
+  }
+
+  if (learnerId && courseId) {
+    const learner = await Learner.findById(learnerId);
+    if (!learner.courses.includes(courseId)) {
+      return next(new IndexError("Learner not enrolled in course", 400));
+    }
   }
 
   // Update invoice details
@@ -223,7 +256,11 @@ export const deleteInvoice = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Invoice not found", 404));
   }
 
-  await invoice.deleteOne();
+  await invoice.findByIdAndUpdate(
+    invoiceId,
+    { isDeleted: true },
+    { new: true }
+  );
 
   res.status(200).json({
     success: true,

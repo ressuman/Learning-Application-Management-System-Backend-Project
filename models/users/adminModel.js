@@ -85,12 +85,19 @@ const adminSchema = mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 adminSchema.pre("save", function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    return next();
+  }
 
   this.password = bcrypt.hashSync(this.password, 12);
 

@@ -61,18 +61,55 @@ const learnerSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: [true, "Amount is required"],
-      min: 0,
+      min: [0, "Amount must be a positive number"],
     },
 
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
+        validate: {
+          validator: async function (value) {
+            const course = await mongoose.model("Course").findById(value);
+            return !!course;
+          },
+          message: "Course does not exist",
+        },
       },
     ],
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "User reference is required"],
+      unique: true,
+      validate: {
+        validator: async function (value) {
+          const user = await mongoose.model("User").findById(value);
+          return !!user;
+        },
+        message: "User does not exist",
+      },
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
+
+learnerSchema.pre("remove", async function (next) {
+  // Remove from courses
+  await mongoose
+    .model("Course")
+    .updateMany({ learners: this._id }, { $pull: { learners: this._id } });
+
+  // Delete related invoices
+  await mongoose.model("Invoice").deleteMany({ learnerId: this._id });
+  next();
+});
 
 const Learner = mongoose.model("Learner", learnerSchema);
 

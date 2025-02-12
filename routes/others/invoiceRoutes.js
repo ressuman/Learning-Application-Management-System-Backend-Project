@@ -12,13 +12,27 @@ import {
   updateInvoice,
 } from "../../controllers/others/invoiceControllers.js";
 
+import Learner from "../../models/others/learnerModel.js";
+
+import asyncHandler from "../../middlewares/asyncHandler.js";
+
 const router = express.Router();
+
+// Middleware implementation
+const checkLearnerCourseRelation = asyncHandler(async (req, res, next) => {
+  const learner = await Learner.findById(req.body.learnerId);
+  if (!learner.courses.includes(req.body.courseId)) {
+    return next(new IndexError("Learner not enrolled in this course", 400));
+  }
+  next();
+});
 
 // Create a new invoice (Admin only)
 router.post(
   "/create-invoice",
   isAdminAuthenticated,
   authorizeRole("admin"),
+  checkLearnerCourseRelation,
   createInvoice
 );
 

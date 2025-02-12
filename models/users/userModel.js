@@ -68,12 +68,19 @@ const userSchema = mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 userSchema.pre("save", function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    return next();
+  }
 
   this.password = bcrypt.hashSync(this.password, 12);
 

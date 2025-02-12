@@ -1,15 +1,15 @@
 import express from "express";
 
-import {
-  isAdminAuthenticated,
-  //isUserAuthenticated,
-} from "../../middlewares/isAuthenticated.js";
+import { isAdminAuthenticated } from "../../middlewares/isAuthenticated.js";
 
 import { authorizeRole } from "../../middlewares/authorizeRole.js";
 
 import {
   createLearner,
+  deleteLearner,
+  getLearner,
   getLearners,
+  updateLearner,
 } from "../../controllers/others/learnerControllers.js";
 
 const router = express.Router();
@@ -31,26 +31,22 @@ router.get(
 router.get(
   "/get-learner/:learnerId",
   isAdminAuthenticated,
-  //isUserAuthenticated,
   authorizeRole("admin"),
-  //authorizeRole("user"),
-  getLearners
+  getLearner
 );
 
 router.put(
   "/update-learner/:learnerId",
   isAdminAuthenticated,
-  //isUserAuthenticated,
   authorizeRole("admin"),
-  //authorizeRole("user"),
-  getLearners
+  updateLearner
 );
 
 router.delete(
   "/delete-learner/:learnerId",
   isAdminAuthenticated,
   authorizeRole("admin"),
-  getLearners
+  deleteLearner
 );
 
 export default router;

@@ -1,7 +1,9 @@
 import validator from "validator";
+import mongoose from "mongoose";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import IndexError from "../../middlewares/indexError.js";
 import Learner from "../../models/others/learnerModel.js";
+import User from "../../models/users/userModel.js";
 
 /**
  * @desc Create a new learner (Admin only)
@@ -31,6 +33,12 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     amount,
     courses,
   } = req.body;
+
+  // Check if user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new IndexError("No user found with this email", 404));
+  }
 
   // Validate email
   if (!validator.isEmail(email)) {
@@ -67,6 +75,7 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     description,
     amount,
     courses,
+    user: user._id,
   });
 
   res.status(201).json({
@@ -97,7 +106,7 @@ export const getLearners = asyncHandler(async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const learners = await Learner.find()
-    .populate("courses")
+    .populate("user courses")
     .skip(skip)
     .limit(limit);
 
@@ -121,27 +130,20 @@ export const getLearners = asyncHandler(async (req, res, next) => {
  */
 export const getLearner = asyncHandler(async (req, res, next) => {
   const { admin } = req;
-  //const user = req.user;
 
   // Extract learnerId from the request parameters
   const { learnerId } = req.params;
 
-  // Ensure only an admin or the learner themselves can view a learner
-  // if (!admin && !user) {
-  //   return next(
-  //     new IndexError(
-  //       "Access denied.  Only admins or the learner themselves can view a learner.",
-  //       403
-  //     )
-  //   );
-  // }
-  // if (!admin && (!user || user.id !== learnerId)) {
-  //   return next(new IndexError("Access denied.", 403));
-  // }
+  // Ensure only an admin can view a learner
   if (!admin) {
     return next(
       new IndexError("Access denied.  Only admins can view a learner.", 403)
     );
+  }
+
+  // Validate learner ID format
+  if (!mongoose.Types.ObjectId.isValid(learnerId)) {
+    return next(new IndexError("Invalid learner ID", 400));
   }
 
   // Validate learner ID format
@@ -150,7 +152,7 @@ export const getLearner = asyncHandler(async (req, res, next) => {
   }
 
   // Find the learner by ID
-  const learner = await Learner.findById(learnerId).populate("courses");
+  const learner = await Learner.findById(learnerId).populate("user courses");
 
   if (!learner) {
     return next(new IndexError("Learner not found", 404));
@@ -170,7 +172,6 @@ export const getLearner = asyncHandler(async (req, res, next) => {
  */
 export const updateLearner = asyncHandler(async (req, res, next) => {
   const { admin } = req;
-  //const user = req.user;
 
   // Extract learnerId from the request parameters
   const { learnerId } = req.params;
@@ -189,18 +190,7 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
     courses,
   } = req.body;
 
-  // Ensure only an admin or the learner themselves can update a learner
-  // if (!admin && !user) {
-  //   return next(
-  //     new IndexError(
-  //       "Access denied.  Only admins or the learner themselves can update a learner.",
-  //       403
-  //     )
-  //   );
-  // }
-  // if (!admin && (!user || user.id !== learnerId)) {
-  //   return next(new IndexError("Access denied.", 403));
-  // }
+  // Ensure only an admin can update a learner
   if (!admin) {
     return next(
       new IndexError("Access denied.  Only admins can update a learner.", 403)
@@ -208,6 +198,11 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
   }
 
   // Validate learner ID format
+  if (!mongoose.Types.ObjectId.isValid(learnerId)) {
+    return next(new IndexError("Invalid learner ID", 400));
+  }
+
+  // Validate learner ID
   if (!learnerId) {
     return next(new IndexError("Learner ID is required", 400));
   }
@@ -219,6 +214,10 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
 
   if (existingLearner) {
     throw new IndexError("Email or phone already exists.", 400);
+  }
+
+  if (!admin && req.user._id !== learner.user) {
+    return next(new IndexError("Access denied", 403));
   }
 
   // Find the learner by ID
@@ -291,7 +290,7 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
 export const deleteLearner = asyncHandler(async (req, res, next) => {
   const { admin } = req;
 
-  if (admin) {
+  if (!admin) {
     return next(
       new IndexError("Access denied. Only admins can delete a learner.", 403)
     );
@@ -309,7 +308,11 @@ export const deleteLearner = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Learner not found", 404));
   }
 
-  await learner.deleteOne();
+  await learner.findByIdAndUpdate(
+    learnerId,
+    { isDeleted: true },
+    { new: true }
+  );
 
   res.status(200).json({
     success: true,

@@ -3,7 +3,7 @@ import IndexError from "../../../middlewares/indexError.js";
 import Admin from "../../../models/users/adminModel.js";
 
 export const getAdminProfile = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   if (!admin) {
     return next(new IndexError("Admin not found", 404));
@@ -22,7 +22,7 @@ export const updateAdminProfile = asyncHandler(async (req, res, next) => {
   const { first_name, last_name, email, password, passwordConfirm, contact } =
     req.body;
 
-  const admin = req.admin;
+  const { admin } = req;
 
   if (!admin) {
     return next(new IndexError("Admin not found", 404));
@@ -73,7 +73,7 @@ export const deleteAdminProfile = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Admin not found", 404));
   }
 
-  await Admin.findByIdAndDelete(admin._id);
+  await Admin.findByIdAndUpdate(admin._id, { isDeleted: true }, { new: true });
 
   res.status(200).json({
     status: "success",

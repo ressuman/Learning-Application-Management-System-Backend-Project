@@ -73,7 +73,7 @@ export const deleteUserProfile = asyncHandler(async (req, res, next) => {
     return next(new IndexError("User not found", 404));
   }
 
-  await User.findByIdAndDelete(user._id);
+  await User.findByIdAndUpdate(user._id, { isDeleted: true }, { new: true });
 
   res.status(200).json({
     status: "success",

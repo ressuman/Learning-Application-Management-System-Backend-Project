@@ -141,6 +141,19 @@ export const usersResendAccountVerification = asyncHandler(
   }
 );
 
+export const checkUserAuth = asyncHandler(async (req, res) => {
+  // Middleware already verified the user
+  res.status(200).json({
+    success: true,
+    message: "User authenticated",
+    data: {
+      id: req.user._id,
+      email: req.user.email,
+      isVerified: req.user.isVerified,
+    },
+  });
+});
+
 // Verify OTP for admin-created profile
 export const verifyOTPForAdminCreatedProfile = asyncHandler(
   async (req, res, next) => {

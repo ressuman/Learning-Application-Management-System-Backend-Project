@@ -9,7 +9,7 @@ import { generateOTP } from "../../../utils/generateOTP.js";
 export const createUserProfile = asyncHandler(async (req, res, next) => {
   const { username, email, password, passwordConfirm } = req.body;
 
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can create a new user
   if (!admin) {
@@ -118,7 +118,7 @@ export const createUserProfile = asyncHandler(async (req, res, next) => {
 
 // Fetches a specific user's profile by ID.(Admin only)
 export const getUserProfileByUserId = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can access this route
   if (!admin) {
@@ -151,7 +151,7 @@ export const getUserProfileByUserId = asyncHandler(async (req, res, next) => {
 
 //  Retrieves a list of all users.(Admin only)
 export const getAllUsers = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can access this route
   if (!admin) {
@@ -182,7 +182,7 @@ export const getAllUsers = asyncHandler(async (req, res, next) => {
 
 //  Retrieves a list of all admins.(Admin only)
 export const getAllAdmins = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can access this route
   if (!admin) {
@@ -213,7 +213,7 @@ export const getAllAdmins = asyncHandler(async (req, res, next) => {
 
 // Fetches both admins and users.
 export const getAllAdminsAndUsers = asyncHandler(async (req, res, next) => {
-  const admin = req.admin;
+  const { admin } = req;
 
   // Ensure only an admin can access this route
   if (!admin) {
@@ -252,7 +252,8 @@ export const getAllAdminsAndUsers = asyncHandler(async (req, res, next) => {
 
 export const updateUserProfileByUserId = asyncHandler(
   async (req, res, next) => {
-    const admin = req.admin;
+    const { admin } = req;
+
     const { userId } = req.params;
     const { username, email, password, passwordConfirm } = req.body;
 
@@ -308,7 +309,7 @@ export const updateUserProfileByUserId = asyncHandler(
 
 export const deleteUserProfileByUserId = asyncHandler(
   async (req, res, next) => {
-    const admin = req.admin;
+    const { admin } = req;
     const { userId } = req.params;
 
     // Ensure only an admin can delete a user profile
@@ -327,7 +328,7 @@ export const deleteUserProfileByUserId = asyncHandler(
       return next(new IndexError("User not found", 404));
     }
 
-    await User.findByIdAndDelete(userId);
+    await User.findByIdAndUpdate(userId, { isDeleted: true }, { new: true });
 
     res.status(200).json({
       status: "success",

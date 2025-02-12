@@ -1,6 +1,7 @@
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import IndexError from "../../middlewares/indexError.js";
 import Course from "../../models/others/courseModel.js";
+import Learner from "../../models/others/learnerModel.js";
 
 /**
  * @desc Create a new course (Admin only)
@@ -17,11 +18,33 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { title, description, duration, price } = req.body;
+  const { title, description, duration, price, learners } = req.body;
 
   // Validate required fields
   if (!title || !description || !duration || !price) {
     return next(new IndexError("All fields are required", 400));
+  }
+
+  // Validate learners if provided
+  if (learners && learners.length > 0) {
+    const existingLearners = await Learner.find({
+      _id: { $in: learners },
+      user: { $exists: true },
+    });
+    if (existingLearners.length !== learners.length) {
+      return next(new IndexError("One or more learners do not exist", 400));
+    }
+  }
+
+  // Validate price matches learner amount if needed
+  if (learners && learners.length > 0) {
+    const learnersData = await Learner.find({ _id: { $in: learners } });
+    const invalid = learnersData.some((l) => l.amount !== price);
+    if (invalid) {
+      return next(
+        new IndexError("Learner amount doesn't match course price", 400)
+      );
+    }
   }
 
   // Create a new course
@@ -30,7 +53,16 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     description,
     duration,
     price,
+    learners,
   });
+
+  // After course creation
+  if (learners && learners.length > 0) {
+    await Learner.updateMany(
+      { _id: { $in: learners } },
+      { $addToSet: { courses: course._id } }
+    );
+  }
 
   res.status(201).json({
     success: true,
@@ -63,7 +95,10 @@ export const getCourses = asyncHandler(async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const courses = await Course.find()
-    .populate("learners")
+    .populate({
+      path: "learners",
+      populate: { path: "user" },
+    }) // Populate learners with user data
     .skip(skip)
     .limit(limit);
 
@@ -135,7 +170,7 @@ export const updateCourse = asyncHandler(async (req, res, next) => {
 
   const { courseId } = req.params;
 
-  const { title, description, duration, price } = req.body;
+  const { title, description, duration, price, learners } = req.body;
 
   // Validate course ID
   if (!courseId) {
@@ -146,6 +181,28 @@ export const updateCourse = asyncHandler(async (req, res, next) => {
 
   if (!course) {
     return next(new IndexError("Course not found", 404));
+  }
+
+  // Validate learners if provided
+  if (learners && learners.length > 0) {
+    const existingLearners = await Learner.find({ _id: { $in: learners } });
+    if (existingLearners.length !== learners.length) {
+      return next(new IndexError("One or more learners do not exist", 400));
+    }
+  }
+
+  if (learners) {
+    // Remove from old learners
+    await Learner.updateMany(
+      { courses: course._id },
+      { $pull: { courses: course._id } }
+    );
+
+    // Add to new learners
+    await Learner.updateMany(
+      { _id: { $in: learners } },
+      { $addToSet: { courses: course._id } }
+    );
   }
 
   // Update course details
@@ -199,7 +256,7 @@ export const deleteCourse = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Course not found", 404));
   }
 
-  await course.deleteOne();
+  await course.findByIdAndUpdate(courseId, { isDeleted: true }, { new: true });
 
   res.status(200).json({
     success: true,
