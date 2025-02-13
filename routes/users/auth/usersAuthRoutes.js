@@ -3,6 +3,7 @@ import passport from "passport";
 import "../../../config/passport/passport.js";
 
 import {
+  checkUserAuth,
   userLogin,
   userLogout,
   userSignUp,
@@ -10,11 +11,15 @@ import {
 
 import { createSendToken } from "../../../utils/createToken.js";
 
+import { isUserAuthenticated } from "../../../middlewares/isAuthenticated.js";
+
 const router = express.Router();
 
 router.post("/signup", userSignUp);
 
 router.post("/signin", userLogin);
+
+router.get("/check-auth", isUserAuthenticated, checkUserAuth);
 
 router.post("/signout", userLogout);
 

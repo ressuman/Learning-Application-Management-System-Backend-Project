@@ -101,7 +101,7 @@ app.use("/api/v1/invoices/admin", invoiceRoutes);
 app.use("/api/v1/revenues/admin", revenueRoutes);
 
 // Error Handling Middleware
-app.all("*", (err, req, res) => {
+app.all("*", (err, req, res, next) => {
   next(new IndexError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 

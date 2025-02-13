@@ -143,9 +143,27 @@ export const adminLogin = asyncHandler(async (req, res, next) => {
   createSendToken(admin, 200, res, "Admin logged in successfully");
 });
 
+export const checkAdminAuth = asyncHandler(async (req, res, next) => {
+  if (!req.admin) {
+    throw new IndexError("Admin not authenticated", 401);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Admin authenticated",
+    data: {
+      id: req.admin._id,
+      email: req.admin.email,
+      isVerified: req.admin.isVerified,
+    },
+  });
+
+  next();
+});
+
 export const adminLogout = asyncHandler(async (req, res, next) => {
   res.cookie("token", "Admin-logged-out", {
-    expires: new Date(Date.now() + 10 * 1000), //expires in 10 seconds
+    expires: new Date(Date.now() + 5 * 1000), //expires in 5 seconds
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   });

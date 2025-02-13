@@ -256,7 +256,7 @@ export const deleteCourse = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Course not found", 404));
   }
 
-  await course.findByIdAndUpdate(courseId, { isDeleted: true }, { new: true });
+  await Course.findByIdAndUpdate(courseId, { isDeleted: true }, { new: true });
 
   res.status(200).json({
     success: true,

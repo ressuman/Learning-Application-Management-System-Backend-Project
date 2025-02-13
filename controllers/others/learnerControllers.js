@@ -308,7 +308,7 @@ export const deleteLearner = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Learner not found", 404));
   }
 
-  await learner.findByIdAndUpdate(
+  await Learner.findByIdAndUpdate(
     learnerId,
     { isDeleted: true },
     { new: true }

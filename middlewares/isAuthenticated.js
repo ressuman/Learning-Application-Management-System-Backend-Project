@@ -12,7 +12,7 @@ export const isUserAuthenticated = asyncHandler(async (req, res, next) => {
   if (!token) {
     return next(
       new IndexError(
-        "Not authenticated. You  are not logged in. Please log in as a user to have access to this resource.",
+        "Not authenticated. You are not logged in. Please log in as a user to have access to this resource.",
         401
       )
     );
@@ -43,7 +43,7 @@ export const isAdminAuthenticated = asyncHandler(async (req, res, next) => {
   if (!token) {
     return next(
       new IndexError(
-        "Not authenticated.You  are not logged in. Please log in as an admin to access this resource.",
+        "Not authenticated. You are not logged in. Please log in as an admin to access this resource.",
         401
       )
     );

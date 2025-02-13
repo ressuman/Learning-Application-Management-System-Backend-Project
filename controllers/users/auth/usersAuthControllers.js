@@ -120,9 +120,27 @@ export const userLogin = asyncHandler(async (req, res, next) => {
   createSendToken(user, 200, res, "User logged in successfully");
 });
 
+export const checkUserAuth = asyncHandler(async (req, res, next) => {
+  if (!req.user) {
+    throw new IndexError("User not authenticated", 401);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "User authenticated",
+    data: {
+      id: req.user._id,
+      email: req.user.email,
+      isVerified: req.user.isVerified,
+    },
+  });
+
+  next();
+});
+
 export const userLogout = asyncHandler(async (req, res, next) => {
   res.cookie("token", "User-logged-out", {
-    expires: new Date(Date.now() + 10 * 1000), //expires in 10 seconds
+    expires: new Date(Date.now() + 5 * 1000), //expires in 5 seconds
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     //sameSite: "none",

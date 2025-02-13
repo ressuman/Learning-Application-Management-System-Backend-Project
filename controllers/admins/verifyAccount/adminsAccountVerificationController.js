@@ -146,16 +146,3 @@ export const adminsResendAccountVerification = asyncHandler(
     }
   }
 );
-
-export const checkAdminAuth = asyncHandler(async (req, res, next) => {
-  // Middleware already verified the admin
-  res.status(200).json({
-    success: true,
-    message: "Admin authenticated",
-    data: {
-      id: req.admin._id,
-      email: req.admin.email,
-      isVerified: req.admin.isVerified,
-    },
-  });
-});

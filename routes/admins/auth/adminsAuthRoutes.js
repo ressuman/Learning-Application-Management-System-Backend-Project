@@ -6,15 +6,20 @@ import {
   adminLogin,
   adminLogout,
   adminSignUp,
+  checkAdminAuth,
 } from "../../../controllers/admins/auth/adminsAuthControllers.js";
 
 import { createSendToken } from "../../../utils/createToken.js";
+
+import { isAdminAuthenticated } from "../../../middlewares/isAuthenticated.js";
 
 const router = express.Router();
 
 router.post("/signup", adminSignUp);
 
 router.post("/signin", adminLogin);
+
+router.get("/check-auth", isAdminAuthenticated, checkAdminAuth);
 
 router.post("/signout", adminLogout);
 
