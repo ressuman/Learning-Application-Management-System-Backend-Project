@@ -63,7 +63,7 @@ export const createLearner = asyncHandler(async (req, res, next) => {
   }
 
   // Create a new learner
-  const learner = await Learner.create({
+  const learner = new Learner({
     firstname,
     lastname,
     email,
@@ -77,6 +77,9 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     courses,
     user: user._id,
   });
+
+  // Save the new learner to the database
+  await learner.save();
 
   res.status(201).json({
     success: true,
@@ -222,6 +225,11 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
 
   // Find the learner by ID
   const learner = await Learner.findById(learnerId);
+  learner._originalCourses = learner.courses; // Capture initial state
+
+  if (courses) {
+    learner.courses = courses; // Let middleware handle updates
+  }
 
   if (!learner) {
     return next(new IndexError("Learner not found", 404));

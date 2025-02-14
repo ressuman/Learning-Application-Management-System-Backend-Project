@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Learner from "./learnerModel.js";
 
 const courseSchema = new mongoose.Schema(
   {
@@ -52,6 +53,29 @@ courseSchema.pre("remove", async function (next) {
   await mongoose
     .model("Learner")
     .updateMany({ courses: this._id }, { $pull: { courses: this._id } });
+  next();
+});
+
+courseSchema.pre("save", async function (next) {
+  if (this.isModified("learners")) {
+    const prevLearners = this._originalLearners || [];
+    const currentLearners = this.learners;
+
+    // Remove from old learners
+    await Learner.updateMany(
+      { _id: { $in: prevLearners } },
+      { $pull: { courses: this._id } }
+    );
+
+    // Add to new learners
+    await Learner.updateMany(
+      { _id: { $in: currentLearners } },
+      { $addToSet: { courses: this._id } }
+    );
+
+    // Store current state for next updates
+    this._originalLearners = currentLearners;
+  }
   next();
 });
 

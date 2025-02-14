@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import validator from "validator";
+import Course from "./courseModel.js";
 
 const learnerSchema = new mongoose.Schema(
   {
@@ -108,6 +109,28 @@ learnerSchema.pre("remove", async function (next) {
 
   // Delete related invoices
   await mongoose.model("Invoice").deleteMany({ learnerId: this._id });
+  next();
+});
+
+learnerSchema.pre("save", async function (next) {
+  if (this.isModified("courses")) {
+    const prevCourses = this._originalCourses || [];
+    const currentCourses = this.courses;
+
+    // Remove from old courses
+    await Course.updateMany(
+      { _id: { $in: prevCourses } },
+      { $pull: { learners: this._id } }
+    );
+
+    // Add to new courses
+    await Course.updateMany(
+      { _id: { $in: currentCourses } },
+      { $addToSet: { learners: this._id } }
+    );
+
+    this._originalCourses = currentCourses;
+  }
   next();
 });
 

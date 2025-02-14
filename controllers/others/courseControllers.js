@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import asyncHandler from "../../middlewares/asyncHandler.js";
 import IndexError from "../../middlewares/indexError.js";
 import Course from "../../models/others/courseModel.js";
@@ -48,7 +49,7 @@ export const createCourse = asyncHandler(async (req, res, next) => {
   }
 
   // Create a new course
-  const course = await Course.create({
+  const course = new Course({
     title,
     description,
     duration,
@@ -56,13 +57,7 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     learners,
   });
 
-  // After course creation
-  if (learners && learners.length > 0) {
-    await Learner.updateMany(
-      { _id: { $in: learners } },
-      { $addToSet: { courses: course._id } }
-    );
-  }
+  await course.save();
 
   res.status(201).json({
     success: true,
@@ -178,6 +173,11 @@ export const updateCourse = asyncHandler(async (req, res, next) => {
   }
 
   const course = await Course.findById(courseId);
+  course._originalLearners = course.learners; // Capture initial state
+
+  if (learners) {
+    course.learners = learners; // Let middleware handle updates
+  }
 
   if (!course) {
     return next(new IndexError("Course not found", 404));
@@ -189,20 +189,6 @@ export const updateCourse = asyncHandler(async (req, res, next) => {
     if (existingLearners.length !== learners.length) {
       return next(new IndexError("One or more learners do not exist", 400));
     }
-  }
-
-  if (learners) {
-    // Remove from old learners
-    await Learner.updateMany(
-      { courses: course._id },
-      { $pull: { courses: course._id } }
-    );
-
-    // Add to new learners
-    await Learner.updateMany(
-      { _id: { $in: learners } },
-      { $addToSet: { courses: course._id } }
-    );
   }
 
   // Update course details
