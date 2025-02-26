@@ -23,22 +23,3 @@ const sendEmail = async (options) => {
 };
 
 export default sendEmail;
-
-// <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-//   <h2 style="color: #0056b3;">Email Verification Required</h2>
-//   <p>Dear ${username},</p>
-//   <p>
-//     Thank you for signing up. To verify your email address, please use the
-//     following One-Time Password (OTP):
-//   </p>
-//   <p style="font-size: 24px; font-weight: bold; color: #0056b3;">${OTP}</p>
-//   <p>
-//     This OTP is valid for <strong>15 minutes</strong>. If you did not request
-//     this, please ignore this email.
-//   </p>
-//   <p>For any questions or support, feel free to contact us.</p>
-//   <p>Best regards,</p>
-//   <p style="font-weight: bold;">
-//     The ${process.env.APP_NAME || "G_Client"} Team
-//   </p>
-// </div>;
