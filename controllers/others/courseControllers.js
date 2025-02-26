@@ -4,6 +4,22 @@ import IndexError from "../../middlewares/indexError.js";
 import Course from "../../models/others/courseModel.js";
 import Learner from "../../models/others/learnerModel.js";
 
+// Helper functions
+const validateCourseDiscount = (discount) => {
+  if (discount < 0 || discount > 100) {
+    throw new IndexError("Course discount must be between 0-100%", 400);
+  }
+};
+
+const formatCourseResponse = (course) => ({
+  ...course.toObject(),
+  pricing: {
+    basePrice: course.basePrice,
+    discount: course.discount,
+    discountedPrice: course.discountedPrice,
+  },
+});
+
 /**
  * @desc Create a new course (Admin only)
  * @route POST /api/v1/courses/create-course
@@ -19,12 +35,16 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { title, description, duration, price, learners } = req.body;
+  const { title, description, duration, basePrice, discount, learners } =
+    req.body;
 
   // Validate required fields
-  if (!title || !description || !duration || !price) {
+  if (!title || !description || !duration || basePrice === undefined) {
     return next(new IndexError("All fields are required", 400));
   }
+
+  // Validate discount
+  validateCourseDiscount(discount);
 
   // Validate learners if provided
   if (learners && learners.length > 0) {
@@ -37,13 +57,13 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // Validate price matches learner amount if needed
+  // Validate  basePrice matches learner amount if needed
   if (learners && learners.length > 0) {
     const learnersData = await Learner.find({ _id: { $in: learners } });
-    const invalid = learnersData.some((l) => l.amount !== price);
+    const invalid = learnersData.some((l) => l.amount !== basePrice);
     if (invalid) {
       return next(
-        new IndexError("Learner amount doesn't match course price", 400)
+        new IndexError("Learner amount doesn't match course  basePrice", 400)
       );
     }
   }
@@ -53,8 +73,9 @@ export const createCourse = asyncHandler(async (req, res, next) => {
     title,
     description,
     duration,
-    price,
-    learners,
+    basePrice,
+    discount: discount || 0,
+    learners: learners || [],
   });
 
   await course.save();
@@ -62,7 +83,7 @@ export const createCourse = asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     message: "Course created successfully",
-    data: { course },
+    data: { course: formatCourseResponse(course) },
   });
 });
 
@@ -92,7 +113,7 @@ export const getCourses = asyncHandler(async (req, res, next) => {
   const courses = await Course.find()
     .populate({
       path: "learners",
-      populate: { path: "user" },
+      select: "firstname lastname email",
     }) // Populate learners with user data
     .skip(skip)
     .limit(limit);
@@ -106,7 +127,7 @@ export const getCourses = asyncHandler(async (req, res, next) => {
     totalCourses,
     currentPage: page,
     totalPages: Math.ceil(totalCourses / limit),
-    data: { courses },
+    data: { courses: courses.map(formatCourseResponse) },
   });
 });
 
@@ -135,7 +156,10 @@ export const getCourse = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Course ID is required", 400));
   }
 
-  const course = await Course.findById(courseId).populate("learners");
+  const course = await Course.findById(courseId).populate({
+    path: "learners",
+    select: "firstname lastname email balance",
+  });
 
   if (!course) {
     return next(new IndexError("Course not found", 404));
@@ -144,7 +168,7 @@ export const getCourse = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Course retrieved successfully",
-    data: { course },
+    data: { course: formatCourseResponse(course) },
   });
 });
 

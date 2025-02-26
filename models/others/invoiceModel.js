@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Revenue from "./revenueModel.js";
-//import validator from "validator";
 
 const invoiceSchema = new mongoose.Schema(
   {
@@ -49,8 +48,42 @@ const invoiceSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "Paid", "Overdue"],
+      enum: ["Pending", "Paid", "Overdue", "Voided"],
       default: "Pending",
+    },
+
+    installmentPlan: {
+      type: Number,
+      enum: [1, 2, 3],
+      required: true,
+    },
+
+    installments: [
+      {
+        dueDate: Date,
+        amount: Number,
+        status: {
+          type: String,
+          enum: ["Pending", "Paid", "Overdue"],
+          default: "Pending",
+        },
+      },
+    ],
+
+    totalAmount: Number,
+
+    discountApplied: Number,
+
+    remainingBalance: Number,
+
+    paymentDate: {
+      type: Date,
+      validate: {
+        validator: function (v) {
+          return this.status !== "Paid" || v;
+        },
+        message: "Payment date required for paid invoices",
+      },
     },
 
     isDeleted: {
@@ -73,7 +106,16 @@ invoiceSchema.post("save", async function (doc) {
   if (doc.status === "Paid") {
     await Revenue.updateOne(
       {},
-      { $inc: { totalRevenue: doc.amount }, $push: { invoices: doc._id } },
+      {
+        $inc: { totalRevenue: doc.amount },
+        $push: {
+          invoices: doc._id,
+          revenueEntries: {
+            amount: doc.amount,
+            date: doc.paymentDate || new Date(),
+          },
+        },
+      },
       { upsert: true }
     );
   }

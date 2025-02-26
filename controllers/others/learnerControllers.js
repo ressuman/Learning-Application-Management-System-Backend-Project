@@ -4,6 +4,7 @@ import asyncHandler from "../../middlewares/asyncHandler.js";
 import IndexError from "../../middlewares/indexError.js";
 import Learner from "../../models/others/learnerModel.js";
 import User from "../../models/users/userModel.js";
+import Course from "../../models/others/courseModel.js";
 
 /**
  * @desc Create a new learner (Admin only)
@@ -32,6 +33,7 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     description,
     amount,
     courses,
+    discounts,
   } = req.body;
 
   // Check if user exists
@@ -62,6 +64,14 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     );
   }
 
+  // Validate courses exist
+  if (courses && courses.length > 0) {
+    const validCourses = await Course.countDocuments({ _id: { $in: courses } });
+    if (validCourses !== courses.length) {
+      return next(new IndexError("One or more courses are invalid", 400));
+    }
+  }
+
   // Create a new learner
   const learner = new Learner({
     firstname,
@@ -74,8 +84,11 @@ export const createLearner = asyncHandler(async (req, res, next) => {
     image,
     description,
     amount,
-    courses,
+    courses: courses || [],
+    discounts: discounts || { registration: 0, courses: [] },
     user: user._id,
+    registrationFeePaid: false,
+    balance: 10, // Default registration fee
   });
 
   // Save the new learner to the database
@@ -84,7 +97,7 @@ export const createLearner = asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     message: "Learner created successfully",
-    data: { learner },
+    data: { learner: await formatLearnerResponse(learner) },
   });
 });
 
@@ -109,7 +122,15 @@ export const getLearners = asyncHandler(async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const learners = await Learner.find()
-    .populate("user courses")
+    .populate({
+      path: "courses",
+      select: "title basePrice",
+    })
+    .populate({
+      path: "discounts.courses.course",
+      select: "title",
+    })
+    .populate("user", "email")
     .skip(skip)
     .limit(limit);
 
@@ -122,7 +143,7 @@ export const getLearners = asyncHandler(async (req, res, next) => {
     totalLearners,
     currentPage: page,
     totalPages: Math.ceil(totalLearners / limit),
-    data: { learners },
+    data: { learners: learners.map(formatLearnerResponse) },
   });
 });
 
@@ -155,7 +176,17 @@ export const getLearner = asyncHandler(async (req, res, next) => {
   }
 
   // Find the learner by ID
-  const learner = await Learner.findById(learnerId).populate("user courses");
+  const learner = await Learner.findById(learnerId)
+    .populate({
+      path: "courses",
+      select: "title basePrice duration",
+    })
+    .populate({
+      path: "discounts.courses.course",
+      select: "title",
+    })
+    .populate("user", "email")
+    .populate("payments.invoice", "amount status");
 
   if (!learner) {
     return next(new IndexError("Learner not found", 404));
@@ -164,7 +195,7 @@ export const getLearner = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Learner retrieved successfully",
-    data: { learner },
+    data: { learner: formatLearnerResponse(learner) },
   });
 });
 
@@ -191,6 +222,8 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
     description,
     amount,
     courses,
+    discounts,
+    registrationFeePaid,
   } = req.body;
 
   // Ensure only an admin can update a learner
@@ -210,13 +243,24 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Learner ID is required", 400));
   }
 
-  const existingLearner = await Learner.findOne({
-    $or: [{ email }, { phone }],
-    _id: { $ne: learnerId }, // Ensure it's not the same user
-  });
+  // const existingLearner = await Learner.findOne({
+  //   $or: [{ email }, { phone }],
+  //   _id: { $ne: learnerId }, // Ensure it's not the same user
+  // });
 
-  if (existingLearner) {
-    throw new IndexError("Email or phone already exists.", 400);
+  // if (existingLearner) {
+  //   throw new IndexError("Email or phone already exists.", 400);
+  // }
+  // Check for duplicate email/phone
+  if (email || phone) {
+    const existingLearner = await Learner.findOne({
+      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+      _id: { $ne: learnerId },
+    });
+
+    if (existingLearner) {
+      return next(new IndexError("Email or phone already exists", 400));
+    }
   }
 
   if (!admin && req.user._id !== learner.user) {
@@ -273,11 +317,41 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
   if (description) {
     learner.description = description;
   }
-  if (amount) {
-    learner.amount = amount;
-  }
+  // if (amount) {
+  //   learner.amount = amount;
+  // }
+  // if (courses) {
+  //   learner.courses = courses;
+  // }
+  // Update courses
   if (courses) {
+    // Validate courses exist
+    const validCourses = await Course.countDocuments({ _id: { $in: courses } });
+    if (validCourses !== courses.length) {
+      return next(new IndexError("One or more courses are invalid", 400));
+    }
     learner.courses = courses;
+  }
+
+  // Update discounts
+  if (discounts) {
+    // Validate discount values
+    if (discounts.registration < 0 || discounts.registration > 100) {
+      return next(new IndexError("Registration discount must be 0-100%", 400));
+    }
+
+    for (const courseDiscount of discounts.courses) {
+      if (courseDiscount.discount < 0 || courseDiscount.discount > 100) {
+        return next(new IndexError("Course discounts must be 0-100%", 400));
+      }
+    }
+
+    learner.discounts = discounts;
+  }
+
+  // Update registration fee status
+  if (typeof registrationFeePaid === "boolean") {
+    learner.registrationFeePaid = registrationFeePaid;
   }
 
   // Save the updated learner details to the database
@@ -286,7 +360,14 @@ export const updateLearner = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Learner details updated successfully",
-    data: { updatedLearner },
+    data: {
+      ...updatedLearner.toObject(),
+      financialSummary: {
+        totalOwed: updatedLearner.balance,
+        registrationFeePaid: updatedLearner.registrationFeePaid,
+        totalCourseFees: updatedLearner.totalCourseFees,
+      },
+    },
   });
 });
 
@@ -327,4 +408,30 @@ export const deleteLearner = asyncHandler(async (req, res, next) => {
     message: "Learner deleted successfully",
     data: null,
   });
+});
+
+// Helper functions
+const validateDiscounts = (discounts) => {
+  if (discounts.registration < 0 || discounts.registration > 100) {
+    throw new IndexError("Registration discount must be between 0-100%", 400);
+  }
+
+  discounts.courses.forEach((d) => {
+    if (d.discount < 0 || d.discount > 100) {
+      throw new IndexError("Course discounts must be between 0-100%", 400);
+    }
+  });
+
+  return discounts;
+};
+
+const formatLearnerResponse = (learner) => ({
+  ...learner.toObject(),
+  financialSummary: {
+    totalOwed: learner.balance,
+    registrationFee: learner.registrationFee,
+    registrationFeePaid: learner.registrationFeePaid,
+    totalCourseFees: learner.totalCourseFees,
+    paymentsMade: learner.payments.reduce((sum, p) => sum + p.amount, 0),
+  },
 });

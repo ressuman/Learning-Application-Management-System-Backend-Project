@@ -59,10 +59,58 @@ const learnerSchema = new mongoose.Schema(
       trim: true,
     },
 
-    amount: {
+    registrationFee: {
       type: Number,
-      required: [true, "Amount is required"],
-      min: [0, "Amount must be a positive number"],
+      default: 10,
+      min: [0, "Registration fee cannot be negative"],
+    },
+
+    registrationFeePaid: {
+      type: Boolean,
+      default: false,
+    },
+
+    totalCourseFees: {
+      type: Number,
+      default: 0,
+    },
+
+    discounts: {
+      registration: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100,
+      },
+      courses: [
+        {
+          course: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Course",
+          },
+          discount: {
+            type: Number,
+            min: 0,
+            max: 100,
+          },
+        },
+      ],
+    },
+
+    payments: [
+      {
+        date: Date,
+        amount: Number,
+        invoice: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Invoice",
+        },
+      },
+    ],
+
+    balance: {
+      type: Number,
+      default: 0,
     },
 
     courses: [
@@ -130,6 +178,32 @@ learnerSchema.pre("save", async function (next) {
     );
 
     this._originalCourses = currentCourses;
+  }
+  next();
+});
+
+// Add pre-save hook for fee calculation
+learnerSchema.pre("save", async function (next) {
+  if (this.isModified("courses") || this.isModified("discounts")) {
+    // Calculate registration fee with discount
+    const regDiscount = this.discounts.registration / 100;
+    const regFee = this.registrationFee * (1 - regDiscount);
+
+    // Calculate course fees with discounts
+    let courseTotal = 0;
+    for (const courseId of this.courses) {
+      const course = await Course.findById(courseId);
+      const courseDiscount =
+        this.discounts.courses.find((d) => d.course.equals(courseId))
+          ?.discount || 0;
+      courseTotal += course.basePrice * (1 - courseDiscount / 100);
+    }
+
+    this.totalCourseFees = courseTotal;
+    this.balance =
+      regFee +
+      courseTotal -
+      this.payments.reduce((sum, p) => sum + p.amount, 0);
   }
   next();
 });

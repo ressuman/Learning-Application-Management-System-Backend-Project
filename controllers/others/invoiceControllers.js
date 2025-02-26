@@ -19,8 +19,15 @@ export const createInvoice = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { learnerId, courseId, amount, description, dueDate, status } =
-    req.body;
+  const {
+    learnerId,
+    courseId,
+    amount,
+    description,
+    dueDate,
+    status,
+    installmentPlan,
+  } = req.body;
 
   // Validate required fields
   if (!learnerId || !courseId || !amount || !dueDate || !status) {
@@ -33,7 +40,12 @@ export const createInvoice = asyncHandler(async (req, res, next) => {
   }
 
   // Validate learner and course exists
-  const learner = await Learner.findById(learnerId);
+  const learner = await Learner.findById(learnerId)
+    .populate("courses")
+    .populate({
+      path: "discounts.courses.course",
+      model: "Course",
+    });
 
   if (!learner) {
     return next(new IndexError("Learner not found", 404));
@@ -45,16 +57,42 @@ export const createInvoice = asyncHandler(async (req, res, next) => {
     return next(new IndexError("Course not found", 404));
   }
 
+  // Calculate fees
+  const regDiscount = learner.discounts.registration / 100;
+  const regFee = learner.registrationFee * (1 - regDiscount);
+
+  const courseDiscount =
+    learner.discounts.courses.find((d) => d.course._id.equals(courseId))
+      ?.discount || 0;
+
+  const courseFee = course.basePrice * (1 - courseDiscount / 100);
+  const totalAmount = regFee + courseFee;
+
+  // Create installments
+  const installmentAmount = totalAmount / installmentPlan;
+  const installments = Array.from({ length: installmentPlan }, (_, i) => ({
+    dueDate: new Date(Date.now() + (i + 1) * 30 * 24 * 60 * 60 * 1000),
+    amount: installmentAmount,
+    status: "Pending",
+  }));
+
   // Create a new invoice
   const invoice = new Invoice({
     learnerId,
     courseId,
-    amount,
+    amount: totalAmount,
+    installmentPlan,
+    installments,
+    totalAmount,
+    discountApplied: regDiscount + courseDiscount,
+    remainingBalance: totalAmount,
     description,
-    dueDate,
+    dueDate: installments[installments.length - 1].dueDate,
     status,
   });
 
+  // Update learner balance
+  learner.balance = totalAmount;
   await invoice.save();
 
   res.status(201).json({

@@ -20,10 +20,17 @@ const courseSchema = new mongoose.Schema(
       required: [true, "Duration is required"],
     },
 
-    price: {
+    basePrice: {
       type: Number,
-      required: [true, "Price is required"],
-      min: [0, "Price must be a positive number"],
+      required: [true, "Base price is required"],
+      min: [0, "Price must be positive"],
+    },
+
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
     },
 
     learners: [
@@ -47,6 +54,13 @@ const courseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+courseSchema.virtual("discountedPrice").get(function () {
+  return this.basePrice * (1 - this.discount / 100);
+});
+
+courseSchema.set("toJSON", { virtuals: true });
+courseSchema.set("toObject", { virtuals: true });
 
 courseSchema.pre("remove", async function (next) {
   // Remove course from learners' courses array
