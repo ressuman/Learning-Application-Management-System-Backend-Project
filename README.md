@@ -3,7 +3,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![LMS Architecture Diagram](./lms.png)
+![LMS Architecture Diagram](./image/lms.png)
 
 A full-stack learning management system with robust admin controls, user management, and comprehensive course administration capabilities.
 
@@ -200,4 +200,4 @@ This README includes:
 
 Here is an expected gif/photos of the preview of the App(LMS App)
 
-## ![LMS image](./lms.png)
+## ![LMS image](./image/lms.png)
