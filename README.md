@@ -195,3 +195,9 @@ This README includes:
 
 
 ```
+
+## Image
+
+Here is an expected gif/photos of the preview of the App(LMS App)
+
+## ![LMS image](./lms.png)
