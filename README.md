@@ -1,10 +1,9 @@
-````markdown
 # G_Client Learning Management System (LMS)
 
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-![LMS Architecture Diagram](https://via.placeholder.com/800x400.png?text=LMS+System+Architecture)
+![LMS Architecture Diagram]("/lms.png")
 
 A full-stack learning management system with robust admin controls, user management, and comprehensive course administration capabilities.
 
@@ -50,20 +49,21 @@ A full-stack learning management system with robust admin controls, user managem
 
 ### Installation
 
-```bash
 # Clone repository
+
 git clone https://github.com/ressuman/Learning-Application-Management-System-Backend-Project.git
 
 # Install dependencies
+
 npm install
 
 # Create environment file
+
 cp .env.example .env
 
 # Start development server
+
 npm run dev
-```
-````
 
 ## ⚙️ Configuration
 
@@ -193,5 +193,5 @@ This README includes:
 6. Development workflow guidance
 7. License and contact information
 
-Let me know if you need any specific section expanded or additional technical details added!
+
 ```
